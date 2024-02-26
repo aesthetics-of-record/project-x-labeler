@@ -1,5 +1,5 @@
-import { cn } from '@/lib/utils';
-import React from 'react';
+import { cn } from "@/lib/utils";
+import React from "react";
 
 interface ButtonPrimaryProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -13,14 +13,11 @@ const ButtonPrimary2: React.FC<ButtonPrimaryProps> = ({
   ...props
 }) => {
   return (
-    <button
-      {...props}
-      className="p-[1px] relative group"
-    >
-      <div className="absolute inset-0 bg-gradient rounded-lg transform group-hover:-translate-y-[2px] transition duration-400" />
+    <button {...props} className="p-[1px] relative group">
+      <div className="absolute inset-0 bg-gradient rounded-lg transform group-hover:-translate-y-[2px] transition duration-300" />
       <div
         className={cn(
-          'px-6 py-2 bg-background rounded-[6px]  relative group transition text-white hover:bg-transparent transform group-hover:-translate-y-[2px] duration-400',
+          "px-6 py-2 bg-background rounded-[6px]  relative group transition text-white hover:bg-transparent transform group-hover:-translate-y-[2px] duration-300",
           className
         )}
       >

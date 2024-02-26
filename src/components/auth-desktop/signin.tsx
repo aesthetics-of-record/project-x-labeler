@@ -11,18 +11,16 @@ import {
 import { Input } from "../ui/input";
 import * as z from "zod";
 import { ClipLoader } from "react-spinners";
+import useUserWithRefresh from "@/hooks/useUserWithRefresh";
+import { useNavigate } from "react-router-dom";
 import { useToast } from "../ui/use-toast";
 import { BackgroundBeams } from "../ui/background-beams";
 import ButtonShimmer from "../custom/button-shimmer";
-import { useAtom } from "jotai";
-import { loginComponentAtom } from "@/lib/jotai/store";
-import { pb } from "@/lib/pocketbase/db";
-import useUserWithRefresh from "@/hooks/useUserWithRefresh";
 
 const Signin = () => {
+  const navigate = useNavigate();
   const { refreshUser } = useUserWithRefresh();
   const { toast } = useToast();
-  const [_, setLoginComponent] = useAtom(loginComponentAtom);
 
   const form = useForm<z.infer<typeof SignInFormSchema>>({
     mode: "onChange",
@@ -38,27 +36,25 @@ const Signin = () => {
   const onSubmit: SubmitHandler<z.infer<typeof SignInFormSchema>> = async (
     formData
   ) => {
-    try {
-      await pb
-        .collection("users")
-        .authWithPassword(formData.email, formData.password);
-    } catch {
+    const { error } = await supabase.auth.signInWithPassword({
+      email: formData.email,
+      password: formData.password,
+    });
+
+    if (error) {
+      console.log(error);
+      form.reset();
+      // setSubmitError(error.message);
       toast({
         title: "로그인 에러",
-        description: "로그인 정보가 유효하지 않습니다.",
+        description:
+          "로그인 정보가 유효하지 않거나, 메일인증을 받지 않은 계정입니다.",
       });
       return;
     }
 
-    if (!pb.authStore.model!.verified) {
-      toast({
-        title: "로그인 에러",
-        description: "먼저 이메일 인증을 해 주세요.",
-      });
-      return;
-    }
-
-    refreshUser("/");
+    navigate("/");
+    refreshUser(); // 유저정보 새로고침
   };
 
   return (
@@ -123,24 +119,12 @@ const Signin = () => {
               <span
                 className="text-gradient hover:underline underline-offset-4 cursor-pointer font-black"
                 onClick={() => {
-                  setLoginComponent("signup");
+                  // setLoginComponent('signup');
                 }}
               >
                 회원가입 하러가기
               </span>
             </span>
-            <ButtonShimmer
-              type="button"
-              onClick={async () => {
-                const a = await pb
-                  .collection("users")
-                  .requestVerification("aaaapple123@naver.com");
-
-                console.log(a);
-              }}
-            >
-              버튼
-            </ButtonShimmer>
           </form>
         </div>
         <BackgroundBeams />

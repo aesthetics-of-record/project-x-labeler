@@ -1,8 +1,8 @@
-import WindowTitlebar from '@/components/titlebar/window-titlebar';
-import { Outlet } from 'react-router-dom';
-import LeftSidebarSm from '../side/left-sidebar-sm';
-import LoginProvider from '@/providers/login-provider';
-import { Toaster } from '../ui/toaster';
+// import WindowTitlebar from "@/components/titlebar/window-titlebar";
+import { Outlet } from "react-router-dom";
+import LeftSidebarSm from "../side/left-sidebar-sm";
+import LoginProvider from "@/providers/login-provider";
+import { Toaster } from "../ui/toaster";
 
 const Layout = () => {
   return (
@@ -10,9 +10,9 @@ const Layout = () => {
       <Toaster />
       <LoginProvider>
         <div className="flex">
-          <LeftSidebarSm className="block" />
-          <div className="flex-1">
-            <WindowTitlebar />
+          <LeftSidebarSm />
+          <div className="">
+            {/* <WindowTitlebar /> */}
             <Outlet />
           </div>
         </div>

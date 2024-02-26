@@ -1,28 +1,30 @@
-import { supabase } from '@/lib/supabase/db';
-import { useEffect } from 'react';
-import { useAtom } from 'jotai'
-import { userAtom } from '@/lib/jotai/store';
-
+import { useEffect } from "react";
+import { useAtom } from "jotai";
+import { userAtom } from "@/lib/jotai/store";
+import { pb } from "@/lib/pocketbase/db";
+import { useNavigate } from "react-router-dom";
 
 const useUserWithRefresh = () => {
-  const [user, setUser] = useAtom(userAtom)
+  const [user, setUser] = useAtom(userAtom);
+  const navigate = useNavigate();
 
-  const refreshUser = async () => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+  const refreshUser = async (to?: string) => {
+    try {
+      const authData = await pb.collection("users").authRefresh();
 
-    const { data } = await supabase
-      .from('users')
-      .select('*')
-      .eq('id', user!.id);
+      if (!pb.authStore.model!.verified) {
+        return;
+      }
 
-    if (user)
-      setUser({
-        ...user,
-        display_name: data![0].display_name,
-        avatar_url: data![0].avatar_url,
-      });
+      if (authData)
+        setUser({
+          authData,
+        });
+
+      if (to) {
+        navigate(to);
+      }
+    } catch {}
   };
 
   useEffect(() => {

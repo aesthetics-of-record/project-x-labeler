@@ -1,5 +1,5 @@
-import { SignInFormSchema } from "@/types/auth";
-import { SubmitHandler, useForm } from "react-hook-form";
+import { SignInFormSchema, SignUpFormSchema } from "@/types/auth";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Form,
@@ -12,53 +12,54 @@ import { Input } from "../ui/input";
 import * as z from "zod";
 import { ClipLoader } from "react-spinners";
 import { useToast } from "../ui/use-toast";
-import { BackgroundBeams } from "../ui/background-beams";
-import ButtonShimmer from "../custom/button-shimmer";
 import { useAtom } from "jotai";
 import { loginComponentAtom } from "@/lib/jotai/store";
+import { BackgroundBeams } from "../ui/background-beams";
+import ButtonShimmer from "../custom/button-shimmer";
 import { pb } from "@/lib/pocketbase/db";
-import useUserWithRefresh from "@/hooks/useUserWithRefresh";
 
-const Signin = () => {
-  const { refreshUser } = useUserWithRefresh();
+const Signup = () => {
+  const [_loginComponent, setLoginComponent] = useAtom(loginComponentAtom);
+
   const { toast } = useToast();
-  const [_, setLoginComponent] = useAtom(loginComponentAtom);
 
-  const form = useForm<z.infer<typeof SignInFormSchema>>({
+  const form = useForm<z.infer<typeof SignUpFormSchema>>({
     mode: "onChange",
-    resolver: zodResolver(SignInFormSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-    },
+    resolver: zodResolver(SignUpFormSchema),
+    defaultValues: { email: "", password: "", confirmPassword: "" },
   });
 
   const isLoading = form.formState.isSubmitting;
 
-  const onSubmit: SubmitHandler<z.infer<typeof SignInFormSchema>> = async (
-    formData
-  ) => {
+  async function signUpNewUser({
+    email,
+    password,
+  }: z.infer<typeof SignInFormSchema>) {
+    await pb.collection("users").create({
+      email: email,
+      password: password,
+      passwordConfirm: password,
+      name: "John Doe",
+    });
+  }
+
+  const onSubmit = async ({
+    email,
+    password,
+  }: z.infer<typeof SignInFormSchema>) => {
     try {
-      await pb
-        .collection("users")
-        .authWithPassword(formData.email, formData.password);
+      await signUpNewUser({ email, password });
+      await pb.collection("users").requestVerification(email);
+      setLoginComponent("confirm");
     } catch {
       toast({
-        title: "로그인 에러",
-        description: "로그인 정보가 유효하지 않습니다.",
+        title: "회원가입 중 오류 발생",
+        description: "회원 가입 중 문제가 발생했습니다.",
       });
-      return;
     }
 
-    if (!pb.authStore.model!.verified) {
-      toast({
-        title: "로그인 에러",
-        description: "먼저 이메일 인증을 해 주세요.",
-      });
-      return;
-    }
-
-    refreshUser("/");
+    // TODO: 메일확인 컴포넌트를 보여주는 상태변경
+    // 컴포넌트도 만들어야함
   };
 
   return (
@@ -103,6 +104,27 @@ const Signin = () => {
                 </FormItem>
               )}
             ></FormField>
+
+            <div className="h-4" />
+
+            <FormField
+              disabled={isLoading}
+              control={form.control}
+              name="confirmPassword"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <Input
+                      type="password"
+                      placeholder="비밀번호 확인"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <div className="h-4" />
 
             <ButtonShimmer
@@ -111,7 +133,7 @@ const Signin = () => {
               disabled={isLoading}
             >
               {!isLoading ? (
-                "로그인"
+                "회원가입"
               ) : (
                 <ClipLoader color="hsla(168, 67%, 53%, 1)" size={20} />
               )}
@@ -119,28 +141,16 @@ const Signin = () => {
             <div className="h-4" />
 
             <span className="flex text-sm">
-              <span className="mr-2 text-slate-400">처음 방문하셨나요 ?</span>
+              <span className="mr-2 text-slate-400">이미 가입하셨나요 ?</span>
               <span
                 className="text-gradient hover:underline underline-offset-4 cursor-pointer font-black"
                 onClick={() => {
-                  setLoginComponent("signup");
+                  setLoginComponent("signin");
                 }}
               >
-                회원가입 하러가기
+                로그인 하러가기
               </span>
             </span>
-            <ButtonShimmer
-              type="button"
-              onClick={async () => {
-                const a = await pb
-                  .collection("users")
-                  .requestVerification("aaaapple123@naver.com");
-
-                console.log(a);
-              }}
-            >
-              버튼
-            </ButtonShimmer>
           </form>
         </div>
         <BackgroundBeams />
@@ -149,4 +159,4 @@ const Signin = () => {
   );
 };
 
-export default Signin;
+export default Signup;
