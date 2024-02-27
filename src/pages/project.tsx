@@ -3,28 +3,30 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { pb } from '@/lib/pocketbase/db';
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
-const Home = () => {
-  const [projects, setProjects] = useState<any>([]);
+const Project = () => {
+  const [images, setImages] = useState<any>([]);
+  const { id } = useParams();
   const navigate = useNavigate()
 
   useEffect(() => {
-    pb.collection('projects')
-      .getFullList({ sort: 'created' })
+    pb.collection('images')
+      .getList(1, 50, {
+        filter: `project_id="${id}"`,
+      })
       .then((list: any) => {
         console.log(list);
-
-        setProjects(list);
+        setImages(list.items);
       });
   }, []);
 
   return (
     <div className="p-4 space-y-4 w-[1200px]">
       <header className="">
-        <h1 className="font-black text-4xl">PROJECT</h1>
+        <h1 className="font-black text-4xl">PROJECT-DETAIL</h1>
         <p className="text-sm text-slate-700 dark:text-slate-400">
-          새로운 프로젝트를 추가할 수 있습니다.
+          진행중인 프로젝트 입니다.
         </p>
         <div className="h-4" />
         <Button
@@ -41,15 +43,17 @@ const Home = () => {
         <Separator className="bg-slate-300 dark:bg-slate-700" />
       </header>
       <div className="grid grid-cols-4 gap-4">
-        {projects.map((project: any) => {
+        {images.map((image: any) => {
           return (
             <Card
             onClick={() => {
-              navigate("/project/" + project?.id)
+              navigate(`/project/${id}/labeler/${image.id}`)
             }}>
               <CardContent>
-                <div>{project?.title}</div>
-                <div>{project?.description}</div>
+                <img
+                  src={`http://43.201.106.51/api/files/${image.collectionId}/${image.id}/${image.image}`}
+                />
+                {image.image}
               </CardContent>
             </Card>
           );
@@ -59,4 +63,4 @@ const Home = () => {
   );
 };
 
-export default Home;
+export default Project;

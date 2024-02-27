@@ -4,6 +4,7 @@ import { ThemeProvider } from "./providers/theme-provider";
 import Home from "./pages/home";
 import ImageLabeler from "./pages/image-labeler/page";
 import MailConfirm from "./pages/MailConfirm";
+import Project from "./pages/project";
 
 const router = createBrowserRouter([
   {
@@ -23,8 +24,12 @@ const router = createBrowserRouter([
         element: <div>세팅</div>,
       },
       {
-        path: "/labeler",
+        path: "project/:project_id/labeler/:image_id",
         element: <ImageLabeler />,
+      },
+      {
+        path: "/project/:id",
+        element: <Project />,
       },
     ],
   },

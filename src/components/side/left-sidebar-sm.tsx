@@ -1,15 +1,21 @@
-import { useMemo } from "react";
-import { cn } from "@/lib/utils";
-import { Separator } from "../ui/separator";
-import { Link, useLocation } from "react-router-dom";
-import { Dashboard, Extensions, Home, Icon, Settings } from "@/icons/global";
-import { ModeToggle } from "../global/mode-toggle";
+import { useMemo } from 'react';
+import { cn } from '@/lib/utils';
+import { Separator } from '../ui/separator';
+import { Link, useLocation } from 'react-router-dom';
+import {
+  Dashboard,
+  Extensions,
+  Home,
+  Icon,
+  Settings,
+} from '@/icons/global';
+import { ModeToggle } from '../global/mode-toggle';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
+} from '@/components/ui/tooltip';
 
 const LeftSidebarSm: React.FC = () => {
   let location = useLocation();
@@ -18,27 +24,27 @@ const LeftSidebarSm: React.FC = () => {
     () => [
       {
         icon: Home,
-        label: "홈화면",
-        active: location.pathname === "/",
-        href: "/",
+        label: '홈화면',
+        active: location.pathname === '/',
+        href: '/',
       },
       {
         icon: Settings,
-        label: "설정",
-        active: location.pathname === "/setting",
-        href: "/setting",
+        label: '설정',
+        active: location.pathname === '/setting',
+        href: '/setting',
       },
       {
         icon: Dashboard,
-        label: "이미지 라벨러",
-        active: location.pathname === "/labeler",
-        href: "/labeler",
+        label: '이미지 라벨러',
+        active: location.pathname === '/labeler',
+        href: '/labeler',
       },
       {
         icon: Extensions,
-        label: "확장프로그램",
-        active: location.pathname === "/extensions",
-        href: "/extensions",
+        label: '확장프로그램',
+        active: location.pathname === '/extensions',
+        href: '/extensions',
       },
     ],
     [location]
@@ -62,13 +68,16 @@ const LeftSidebarSm: React.FC = () => {
                     key={item.label}
                     to={item.href}
                     className={cn(
-                      "transform hover:-translate-y-[2px] transition duration-300 w-full aspect-1 flex items-center justify-center hover:bg-border",
+                      'w-[64px] transform hover:-translate-y-[2px] transition duration-300 aspect-1 flex items-center justify-center hover:bg-border',
                       item.active
-                        ? "text-primary hover:text-primary dark:hover:text-primary"
-                        : ""
+                        ? 'text-primary hover:text-primary dark:hover:text-primary'
+                        : ''
                     )}
                   >
-                    <item.icon width={24} height={24} />
+                    <item.icon
+                      width={24}
+                      height={24}
+                    />
                   </Link>
                 </TooltipTrigger>
                 <TooltipContent side="right">

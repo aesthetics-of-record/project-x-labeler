@@ -83,6 +83,9 @@ body {
 .h-border-titlebar-screen {
   height: calc(100vh - 34px)
 }
+.w-side-screen {
+  width: calc(100vh - 64px);
+}
 
 .text-gradient {
   background: linear-gradient(to top left,#fc00ff,#00dbde);

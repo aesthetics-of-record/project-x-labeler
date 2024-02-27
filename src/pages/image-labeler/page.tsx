@@ -1,21 +1,24 @@
-import { cn } from "@/lib/utils";
-import { useRef, useState, useEffect } from "react";
-import { twMerge } from "tailwind-merge";
-import { BoxIcon, HandIcon } from "@radix-ui/react-icons";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { cn } from '@/lib/utils';
+import { useRef, useState, useEffect } from 'react';
+import { twMerge } from 'tailwind-merge';
+import { BoxIcon, HandIcon } from '@radix-ui/react-icons';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
   Card,
   CardContent,
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import ButtonPrimary1 from "@/components/custom/button-primary-1";
+} from '@/components/ui/card';
+import ButtonPrimary1 from '@/components/custom/button-primary-1';
+import { pb } from '@/lib/pocketbase/db';
+import { useParams } from 'react-router-dom';
 
 const image = new Image();
 
 const ImageLabeler = () => {
+  const { image_id } = useParams();
   const canvasRef = useRef<any>(null);
   const imageRef = useRef<any>(null);
   const [isDrawing, setIsDrawing] = useState(false);
@@ -33,15 +36,23 @@ const ImageLabeler = () => {
     oppositeX: -1,
     oppositeY: -1,
   });
+  const [imageUrl, setImageUrl] = useState<string>('');
 
-  const imageUrl =
-    "https://dfstudio-d420.kxcdn.com/wordpress/wp-content/uploads/2019/06/digital_camera_photo-1080x675.jpg";
+  useEffect(() => {
+    pb.collection('images')
+      .getOne(image_id as string)
+      .then((image: any) => {
+        setImageUrl(
+          `http://43.201.106.51/api/files/${image.collectionId}/${image.id}/${image.image}`
+        );
+      });
+  }, []);
 
   useEffect(() => {
     image.src = imageUrl;
     image.onload = () => {
       const canvas: any = canvasRef.current;
-      const ctx = canvas.getContext("2d");
+      const ctx = canvas.getContext('2d');
 
       canvas.width = image.width;
       canvas.height = image.height;
@@ -97,7 +108,7 @@ const ImageLabeler = () => {
     if (tool === 0 && isResize.direction) {
       const rect = canvasRef.current.getBoundingClientRect();
 
-      if (isResize.direction === "nw") {
+      if (isResize.direction === 'nw') {
         const currentX = e.clientX - rect.left;
         const currentY = e.clientY - rect.top;
 
@@ -114,7 +125,7 @@ const ImageLabeler = () => {
 
         setBboxList(copy);
       }
-      if (isResize.direction === "ne") {
+      if (isResize.direction === 'ne') {
         const currentX = e.clientX - rect.left;
         const currentY = e.clientY - rect.top;
 
@@ -131,7 +142,7 @@ const ImageLabeler = () => {
 
         setBboxList(copy);
       }
-      if (isResize.direction === "se") {
+      if (isResize.direction === 'se') {
         const currentX = e.clientX - rect.left;
         const currentY = e.clientY - rect.top;
 
@@ -148,7 +159,7 @@ const ImageLabeler = () => {
 
         setBboxList(copy);
       }
-      if (isResize.direction === "sw") {
+      if (isResize.direction === 'sw') {
         const currentX = e.clientX - rect.left;
         const currentY = e.clientY - rect.top;
 
@@ -165,7 +176,7 @@ const ImageLabeler = () => {
 
         setBboxList(copy);
       }
-      if (isResize.direction === "center") {
+      if (isResize.direction === 'center') {
         const bbox = bboxList[isResize.index];
 
         const currentX0 = e.clientX - rect.left - bbox.width / 2;
@@ -187,7 +198,7 @@ const ImageLabeler = () => {
 
     if (!isDrawing) return;
 
-    const ctx = canvasRef.current.getContext("2d");
+    const ctx = canvasRef.current.getContext('2d');
 
     const rect = canvasRef.current.getBoundingClientRect();
     const currentX = e.clientX - rect.left;
@@ -200,7 +211,7 @@ const ImageLabeler = () => {
 
     ctx.setLineDash([10, 15]);
 
-    ctx.strokeStyle = "black";
+    ctx.strokeStyle = 'black';
     ctx.lineWidth = 2;
     ctx.rect(
       startPoint.x,
@@ -224,7 +235,7 @@ const ImageLabeler = () => {
         oppositeY: -1,
       });
 
-      if (isResize.direction === "center") {
+      if (isResize.direction === 'center') {
         const rect = canvasRef.current.getBoundingClientRect();
 
         const bbox = bboxList[isResize.index];
@@ -306,17 +317,17 @@ const ImageLabeler = () => {
 
     const bbox = {
       class: 0,
-      label: "bread",
+      label: 'bread',
       x0: x0,
       y0: y0,
       width: width,
       height: height,
       active: false,
-      color: "#22c55e55",
+      color: '#22c55e55',
     };
     // console.log(bbox);
 
-    const ctx = canvasRef.current.getContext("2d");
+    const ctx = canvasRef.current.getContext('2d');
 
     ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
     ctx.drawImage(imageRef.current, 0, 0);
@@ -328,8 +339,25 @@ const ImageLabeler = () => {
     <>
       <div className="flex h-screen">
         <menu className="overflow-auto scrollbar">
-          <header className="flex items-center justify-center border-b h-12">
+          <header className="flex gap-2 items-center justify-center border-b h-12">
             라벨링
+            <Button
+              variant={'outline'}
+              onClick={async () => {
+                try {
+                  await pb.collection('images').update(image_id as string, {
+                    json_label: bboxList,
+                  });
+                  console.log('저장 완료');
+                } catch {
+                  console.log('저장 실패');
+
+                  return;
+                }
+              }}
+            >
+              저장
+            </Button>
           </header>
           <ul className="bg-neutral w-56">
             {bboxList.map((bbox, i) => {
@@ -352,7 +380,7 @@ const ImageLabeler = () => {
                       console.log(copy);
                     }
                   }}
-                  className={cn("px-3 py-1", bbox.active && "bg-primary")}
+                  className={cn('px-3 py-1', bbox.active && 'bg-primary')}
                 >
                   {bbox.label}
                 </li>
@@ -369,11 +397,11 @@ const ImageLabeler = () => {
               </div>
               <div className="flex-none">
                 <Button
-                  size={"icon"}
-                  variant={"ghost"}
+                  size={'icon'}
+                  variant={'ghost'}
                   className={twMerge(
-                    "",
-                    tool == 0 && "hover:bg-primary bg-primary"
+                    '',
+                    tool == 0 && 'hover:bg-primary bg-primary'
                   )}
                   onClick={() => {
                     setTool(0);
@@ -382,11 +410,11 @@ const ImageLabeler = () => {
                   <HandIcon />
                 </Button>
                 <Button
-                  size={"icon"}
-                  variant={"ghost"}
+                  size={'icon'}
+                  variant={'ghost'}
                   className={twMerge(
-                    "",
-                    tool == 1 && "hover:bg-primary bg-primary"
+                    '',
+                    tool == 1 && 'hover:bg-primary bg-primary'
                   )}
                   onClick={() => {
                     setTool(1);
@@ -402,11 +430,11 @@ const ImageLabeler = () => {
                   <BoxIcon />
                 </Button>
                 <Button
-                  size={"icon"}
-                  variant={"ghost"}
+                  size={'icon'}
+                  variant={'ghost'}
                   className={twMerge(
-                    "",
-                    tool == 2 && "hover:bg-primary bg-primary"
+                    '',
+                    tool == 2 && 'hover:bg-primary bg-primary'
                   )}
                   onClick={() => {
                     setTool(2);
@@ -423,7 +451,7 @@ const ImageLabeler = () => {
             onMouseUp={handleMouseUp}
           >
             <canvas
-              className={twMerge("cursor-default m-[100px]")}
+              className={twMerge('cursor-default m-[100px]')}
               ref={canvasRef}
               onMouseDown={handleMouseDown}
               onMouseMove={handleMouseMove}
@@ -439,20 +467,21 @@ const ImageLabeler = () => {
                 <div
                   key={index}
                   style={{
-                    position: "absolute",
+                    position: 'absolute',
                     left: `${bbox.x0 + 100}px`,
                     top: `${bbox.y0 + 100}px`,
                     width: `${bbox.width}px`,
                     height: `${bbox.height}px`,
-                    border: "2px solid #22c55e",
+                    border: '2px solid #22c55e',
                     backgroundColor: bbox.active && bbox.color,
                   }}
                   className={cn(
-                    "",
-                    tool === 0 && "cursor-pointer",
-                    (tool === 1 || isResize.direction) && "pointer-events-none",
+                    '',
+                    tool === 0 && 'cursor-pointer',
+                    (tool === 1 || isResize.direction) &&
+                      'pointer-events-none',
                     bbox.active === true &&
-                      "border-2 border-dashed cursor-default resize z-20"
+                      'border-2 border-dashed cursor-default resize z-20'
                   )}
                   onClick={() => {
                     let copy = [...bboxList];
@@ -472,7 +501,7 @@ const ImageLabeler = () => {
                           const oppositeY = bbox.y0 + bbox.height;
 
                           setIsResize({
-                            direction: "nw",
+                            direction: 'nw',
                             index: index,
                             oppositeX: oppositeX,
                             oppositeY: oppositeY,
@@ -486,7 +515,7 @@ const ImageLabeler = () => {
                           const oppositeY = bbox.y0 + bbox.height;
 
                           setIsResize({
-                            direction: "ne",
+                            direction: 'ne',
                             index: index,
                             oppositeX: oppositeX,
                             oppositeY: oppositeY,
@@ -500,7 +529,7 @@ const ImageLabeler = () => {
                           const oppositeY = bbox.y0;
 
                           setIsResize({
-                            direction: "se",
+                            direction: 'se',
                             index: index,
                             oppositeX: oppositeX,
                             oppositeY: oppositeY,
@@ -514,7 +543,7 @@ const ImageLabeler = () => {
                           const oppositeY = bbox.y0;
 
                           setIsResize({
-                            direction: "sw",
+                            direction: 'sw',
                             index: index,
                             oppositeX: oppositeX,
                             oppositeY: oppositeY,
@@ -525,7 +554,7 @@ const ImageLabeler = () => {
                         className="rounded-full w-4 h-4 border-2 absolute left-[calc(50%-8px)] top-[calc(50%-8px)] cursor-move"
                         onMouseDown={() => {
                           setIsResize({
-                            direction: "center",
+                            direction: 'center',
                             index: index,
                             oppositeX: -1,
                             oppositeY: -1,
@@ -548,7 +577,7 @@ const ImageLabeler = () => {
                     </>
                   ) : null}
                   {bbox.active && (
-                    <menu className={cn("absolute -bottom-[236px]")}>
+                    <menu className={cn('absolute -bottom-[236px]')}>
                       <Card className="h-[220px] w-[250px] opacity-100 rounded-sm">
                         <CardHeader>
                           <CardTitle className="font-black text-xl">
@@ -568,12 +597,17 @@ const ImageLabeler = () => {
                           }}
                         >
                           <CardContent className="flex gap-4 items-center">
-                            <Input defaultValue={bbox.label} id="label" />
+                            <Input
+                              defaultValue={bbox.label}
+                              id="label"
+                            />
                           </CardContent>
                           <CardFooter className="grid grid-cols-2 gap-4">
-                            <ButtonPrimary1 type="submit">확인</ButtonPrimary1>
+                            <ButtonPrimary1 type="submit">
+                              확인
+                            </ButtonPrimary1>
                             <Button
-                              variant={"ghost"}
+                              variant={'ghost'}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 const copy = [...bboxList];
